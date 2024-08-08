@@ -45,7 +45,7 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 func (c *Cache) reap() {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
-	done := make(chan struct{})
+	done := make(chan bool)
 	go func() {
 		time.Sleep(60 * 5 * time.Second)
 		done <- true
@@ -57,10 +57,11 @@ func (c *Cache) reap() {
 		case <-ticker.C:
 			c.mu.Lock()
 			for key, entry := range c.cache {
-				if time.Now()-entry.createdAt > c.duration {
+				if time.Now().Sub(entry.createdAt) > c.duration {
 					delete(c.cache, key)
 				}
 			}
 			c.mu.Unlock()
+		}
 	}
 }
